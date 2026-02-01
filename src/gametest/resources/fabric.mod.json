@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "pathslab-gametest",
+  "version": "${version}",
+  "name": "Path Slab GameTests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.michionlion.pathslab.test.PathSlabGameTest"
+    ]
+  },
+  "depends": {
+    "minecraft": "${minecraft_version}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_version}",
+    "java": ">=21"
+  }
+}

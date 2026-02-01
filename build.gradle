@@ -2,6 +2,7 @@ plugins {
     id "java"
     id "net.fabricmc.fabric-loom-remap" version "${loom_version}"
     id "com.modrinth.minotaur" version "2.8.10"
+    id "com.diffplug.spotless" version "7.2.1"
 }
 
 base {
@@ -11,9 +12,22 @@ base {
 version = project.mod_version
 group = project.maven_group
 
+def modVersion = project.version
+def mcVersion = project.minecraft_version
+
 repositories {
     maven { url = "https://maven.fabricmc.net/" }
     mavenCentral()
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "pathslab-gametest"
+        enableGameTests = true
+        enableClientGameTests = true
+        eula = true
+    }
 }
 
 dependencies {
@@ -21,12 +35,13 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
-}
 
-def modVersion = project.version
-def mcVersion = project.minecraft_version
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+    testImplementation "com.google.code.gson:gson:2.10.1"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
+
+    add("gametestImplementation", sourceSets.main.output)
+}
 
 processResources {
     inputs.property "version", modVersion
@@ -45,6 +60,37 @@ processResources {
     }
 }
 
+processGametestResources {
+    inputs.property "version", modVersion
+    inputs.property "minecraft_version", mcVersion
+    inputs.property "loader_version", loader_version
+    inputs.property "fabric_version", fabric_version
+    filteringCharset = "UTF-8"
+
+    filesMatching("fabric.mod.json") {
+        expand(
+            version: modVersion,
+            minecraft_version: mcVersion,
+            loader_version: loader_version,
+            fabric_version: fabric_version
+        )
+    }
+}
+
+spotless {
+    format "misc", {
+        target "**/*.gradle", "**/*.md", "**/*.txt", "**/*.json", "**/*.yml", "**/*.yaml"
+        trimTrailingWhitespace()
+        leadingTabsToSpaces(2)
+        endWithNewline()
+    }
+    java {
+        googleJavaFormat("1.33.0").aosp()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
 modrinth {
     projectId = "path-slab"
     versionType = "release"
@@ -57,12 +103,18 @@ modrinth {
     dependencies {
         required.project "fabric-api"
     }
-    
+
     changelog = System.getenv("CHANGELOG") ?: "No changelog provided."
     syncBodyFrom = file("README.md").text
     debugMode = project.hasProperty("modrinthDebug")
 }
 
+test {
+    useJUnitPlatform()
+
+    systemProperty "fabric.development", "true"
+    systemProperty "fabric.gametest", "true"
+}
 
 java {
     toolchain {
@@ -74,8 +126,24 @@ java {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = 21
+    options.compilerArgs.add("-Xlint:deprecation")
 }
 
-tasks.test {
-    useJUnitPlatform()
+loom {
+    runs {
+        // Configure gametest run configuration
+        gametest {
+            inherit server
+            name "Game Test"
+            vmArg "-ea"
+            property "fabric.remapClasspathFile", project.file('.gradle/loom-cache/remapClasspath.txt').absolutePath
+            property "fabric.runtimeNamespace", "intermediary"
+            property "fabric-api.gametest", "true"
+            property "fabric-api.gametest.report-file", file("build/test-results/gametest.xml").absolutePath
+
+            source sourceSets.gametest
+        }
+    }
 }
+
+compileJava.dependsOn spotlessApply
