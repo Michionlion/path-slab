@@ -1,0 +1,75 @@
+plugins {
+    id "java"
+    id "net.fabricmc.fabric-loom-remap" version "${loom_version}"
+    id "com.modrinth.minotaur" version "2.8.10"
+}
+
+base {
+    archivesName = project.archives_base_name
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+}
+
+def modVersion = project.version
+def mcVersion = project.minecraft_version
+
+processResources {
+    inputs.property 'version', modVersion
+    inputs.property 'minecraft_version', mcVersion
+    inputs.property 'loader_version', loader_version
+    inputs.property 'fabric_version', fabric_version
+    filteringCharset = 'UTF-8'
+
+    filesMatching('fabric.mod.json') {
+        expand(
+            version: modVersion,
+            minecraft_version: mcVersion,
+            loader_version: loader_version,
+            fabric_version: fabric_version
+        )
+    }
+}
+
+modrinth {
+    projectId = "path-slab"
+    versionType = "release"
+    versionNumber = "${modVersion}+mc${mcVersion}"
+    versionName = "Path Slab ${modVersion} (Minecraft ${mcVersion})"
+    uploadFile = tasks.remapJar
+    gameVersions = [mcVersion]
+    loaders = ["fabric"]
+
+    dependencies {
+        required.project "fabric-api"
+    }
+    
+    changelog = System.getenv("CHANGELOG") ?: "No changelog provided."
+    syncBodyFrom = file("README.md").text
+    debugMode = project.hasProperty("modrinthDebug")
+}
+
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}

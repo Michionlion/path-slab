@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "type=bottom,waterlogged=false": {
+      "model": "pathslab:block/dirt_path_slab"
+    },
+    "type=bottom,waterlogged=true": {
+      "model": "pathslab:block/dirt_path_slab"
+    },
+    "type=top,waterlogged=false": {
+      "model": "pathslab:block/dirt_path_slab_top"
+    },
+    "type=top,waterlogged=true": {
+      "model": "pathslab:block/dirt_path_slab_top"
+    },
+    "type=double": {
+      "model": "pathslab:block/dirt_path_slab_double"
+    }
+  }
+}

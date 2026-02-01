@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "pathslab",
+  "version": "${version}",
+  "name": "Dirt Path Slab",
+  "description": "Dirt path slabs, so you can finally sprint down your paths.",
+  "authors": [
+    "Michionlion"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.michionlion.pathslab.PathSlab"
+    ]
+  },
+  "depends": {
+    "minecraft": "${minecraft_version}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_version}",
+    "java": ">=21"
+  }
+}
