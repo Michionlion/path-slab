@@ -20,8 +20,7 @@
       ],
       "faces": {
         "down": {
-          "texture": "#bottom",
-          "cullface": "down"
+          "texture": "#bottom"
         },
         "up": {
           "texture": "#top"
