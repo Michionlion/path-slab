@@ -19,12 +19,14 @@ public class DirtPathSlabBlock extends SlabBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(
+            BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return shapeFor(state);
     }
 
     @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getCollisionShape(
+            BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return shapeFor(state);
     }
 
@@ -34,7 +36,8 @@ public class DirtPathSlabBlock extends SlabBlock {
     }
 
     @Override
-    public VoxelShape getVisualShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getVisualShape(
+            BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return shapeFor(state);
     }
 
@@ -54,4 +57,3 @@ public class DirtPathSlabBlock extends SlabBlock {
         return BOTTOM_SHAPE;
     }
 }
-
