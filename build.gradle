@@ -147,3 +147,4 @@ loom {
 }
 
 compileJava.dependsOn spotlessApply
+spotlessMisc.mustRunAfter("downloadAssets")
