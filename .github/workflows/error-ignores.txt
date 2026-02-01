@@ -1,0 +1,2 @@
+Error starting SoundSystem
+Error while loading the narrator

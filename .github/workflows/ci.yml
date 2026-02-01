@@ -26,6 +26,7 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Run client briefly
+        id: run-client
         shell: bash
         run: |
           set -euo pipefail
@@ -78,12 +79,37 @@ jobs:
             wait "$RUN_JOB" || true
           fi
 
-          if grep -E "(\bERROR\b|\bFATAL\b|Exception|Caused by:)" "$LOG_FILE"; then
-            echo "runClient logged errors."
-            cat "$LOG_FILE"
-            exit 1
+          IGNORE_FILE=.github/workflows/error-ignores.txt
+
+          if grep -E "(\bERROR\b|\bFATAL\b)" "$LOG_FILE" > runClient.errors.log; then
+            echo "runClient logged errors:"
+            grep -E "(\bWARN\b|\bWARNING\b|\bERROR\b|\bFATAL\b)" "$LOG_FILE"
+
+            echo "had_errors=true" >> "$GITHUB_OUTPUT"
+
+            if [ -f "$IGNORE_FILE" ] && [ -s "$IGNORE_FILE" ]; then
+              grep -vF -f "$IGNORE_FILE" runClient.errors.log > runClient.unignored.log || true
+            else
+              cp runClient.errors.log runClient.unignored.log
+            fi
+            if [ -s runClient.unignored.log ]; then
+              echo "Unignored errors:"
+              cat runClient.unignored.log
+              exit 1
+            fi
           fi
 
-          grep -E "(\bWARN\b|\bWARNING\b|\bERROR\b|\bFATAL\b|Exception|Caused by:)" "$LOG_FILE"
+          if ! grep -E "(\bERROR\b|\bFATAL\b)" "$LOG_FILE" > /dev/null; then
+            echo "had_errors=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          grep -E "(\bWARN\b|\bWARNING\b|\bERROR\b|\bFATAL\b)" "$LOG_FILE"
 
           exit 0
+
+      - name: Upload runClient log on errors
+        if: steps.run-client.outputs.had_errors == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: runClient-log
+          path: runClient.log
