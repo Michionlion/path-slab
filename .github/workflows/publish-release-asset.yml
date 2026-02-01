@@ -1,0 +1,45 @@
+name: Attach Remapped Jar to Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  attach-jar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build remapped jar
+        run: ./gradlew remapJar
+
+      - name: Rename jar for release
+        shell: bash
+        run: |
+          MOD_VERSION=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2)
+          MC_VERSION=$(grep -E '^minecraft_version=' gradle.properties | cut -d= -f2)
+          ARCHIVES_BASE_NAME=$(grep -E '^archives_base_name=' gradle.properties | cut -d= -f2)
+          TARGET_NAME="${ARCHIVES_BASE_NAME}-${MOD_VERSION}+mc${MC_VERSION}.jar"
+          JAR_PATH=$(ls build/libs/*.jar | grep -v -- '-sources.jar$' | head -n 1)
+          mv "$JAR_PATH" "build/libs/${TARGET_NAME}"
+
+      - name: Upload jar to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
